@@ -24,6 +24,28 @@ test.describe('Game Listing and Navigation', () => {
     });
   });
 
+  test('should filter games by title and show an empty state for no matches', async ({ page }) => {
+    await page.goto('/');
+
+    const searchInput = page.getByRole('searchbox', { name: 'Search games by title' });
+    await expect(searchInput).toBeVisible();
+
+    await test.step('Filter games case-insensitively', async () => {
+      await searchInput.fill('dEvOpS');
+      await expect(page.getByTestId('game-card').filter({ hasText: 'DevOps Dominion' })).toBeVisible();
+      await expect(page.getByTestId('game-card').filter({ hasText: 'Pipeline Conquest' })).toBeHidden();
+      await expect(page.getByTestId('search-results-status')).toHaveText('1 game found.');
+    });
+
+    await test.step('Show an empty state when no titles match', async () => {
+      await searchInput.fill('no such game title');
+      await expect(page.getByTestId('search-empty-state')).toBeVisible();
+      await expect(page.getByTestId('search-empty-state')).toContainText('No games match your search.');
+      await expect(page.getByTestId('search-results-status')).toHaveText('No games match your search.');
+      await expect(page.getByTestId('game-card').filter({ hasText: 'DevOps Dominion' })).toBeHidden();
+    });
+  });
+
   test('should navigate to correct game details page when clicking on a game', async ({ page }) => {
     let gameId: string | null;
     let gameTitle: string | null;
